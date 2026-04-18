@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    background: #0d0a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Georgia, serif;
+    overflow: hidden;
+    position: relative;
+  }
+
+  canvas#stars {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 3rem 2.5rem;
+    max-width: 520px;
+  }
+
+  .seven {
+    font-size: 7rem;
+    font-weight: 700;
+    color: #c084fc;
+    line-height: 1;
+    text-shadow: 0 0 60px #a855f766;
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  .years-label {
+    font-size: 1rem;
+    letter-spacing: 0.35em;
+    color: #a78bfa;
+    text-transform: uppercase;
+    margin-top: 0.3rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .message {
+    font-size: 1.45rem;
+    color: #ede9fe;
+    line-height: 1.7;
+    font-style: italic;
+  }
+
+  .message em {
+    color: #c084fc;
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  .footer {
+    margin-top: 2.5rem;
+    font-size: 0.85rem;
+    color: #7c3aed88;
+    letter-spacing: 0.15em;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.85; transform: scale(1.04); }
+  }
+
+  .heart-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<canvas class="heart-canvas" id="hearts"></canvas>
+
+<div class="container">
+  <div class="seven">7</div>
+  <div class="years-label">años juntos</div>
+  <div class="message">
+    Felices 7 años, <em>June</em>.<br>
+    Como un sabio dijo,<br>
+    no son suficientes.
+  </div>
+  <div class="footer">18 · 04 · 2026</div>
+</div>
+
+<script>
+const starCanvas = document.getElementById('stars');
+const sc = starCanvas.getContext('2d');
+const hCanvas = document.getElementById('hearts');
+const hc = hCanvas.getContext('2d');
+
+function resize() {
+  starCanvas.width = window.innerWidth;
+  starCanvas.height = window.innerHeight;
+  hCanvas.width = window.innerWidth;
+  hCanvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// Stars
+const stars = [];
+for (let i = 0; i < 160; i++) {
+  stars.push({
+    x: Math.random(),
+    y: Math.random(),
+    r: Math.random() * 1.2 + 0.2,
+    a: Math.random(),
+    speed: Math.random() * 0.008 + 0.003
+  });
+}
+
+function drawStars() {
+  sc.clearRect(0, 0, starCanvas.width, starCanvas.height);
+  for (const s of stars) {
+    s.a += s.speed;
+    const alpha = (Math.sin(s.a) + 1) / 2 * 0.8 + 0.1;
+    sc.beginPath();
+    sc.arc(s.x * starCanvas.width, s.y * starCanvas.height, s.r, 0, Math.PI * 2);
+    sc.fillStyle = `rgba(192, 132, 252, ${alpha})`;
+    sc.fill();
+  }
+}
+
+// Hearts
+class Heart {
+  constructor() { this.reset(true); }
+  reset(init) {
+    this.x = Math.random() * hCanvas.width;
+    this.y = init ? Math.random() * hCanvas.height : hCanvas.height + 30;
+    this.size = Math.random() * 14 + 7;
+    this.speedY = Math.random() * 0.6 + 0.25;
+    this.speedX = (Math.random() - 0.5) * 0.4;
+    this.alpha = Math.random() * 0.5 + 0.3;
+    this.rot = Math.random() * Math.PI * 2;
+    this.rotSpeed = (Math.random() - 0.5) * 0.015;
+  }
+  draw() {
+    hc.save();
+    hc.translate(this.x, this.y);
+    hc.rotate(this.rot);
+    hc.globalAlpha = this.alpha;
+    const s = this.size;
+    hc.beginPath();
+    hc.moveTo(0, s * 0.25);
+    hc.bezierCurveTo(-s * 0.5, -s * 0.2, -s, s * 0.1, 0, s);
+    hc.bezierCurveTo(s, s * 0.1, s * 0.5, -s * 0.2, 0, s * 0.25);
+    const grad = hc.createRadialGradient(0, s * 0.4, 0, 0, s * 0.4, s);
+    grad.addColorStop(0, '#e879f9');
+    grad.addColorStop(1, '#7c3aed');
+    hc.fillStyle = grad;
+    hc.fill();
+    hc.restore();
+  }
+  update() {
+    this.y -= this.speedY;
+    this.x += this.speedX;
+    this.rot += this.rotSpeed;
+    if (this.y < -30) this.reset(false);
+  }
+}
+
+const hearts = [];
+for (let i = 0; i < 28; i++) hearts.push(new Heart());
+
+function loop() {
+  hc.clearRect(0, 0, hCanvas.width, hCanvas.height);
+  for (const h of hearts) { h.update(); h.draw(); }
+  drawStars();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
